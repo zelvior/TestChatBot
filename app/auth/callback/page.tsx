@@ -15,7 +15,6 @@ function CallbackContent() {
     const codeVerifier = localStorage.getItem('code_verifier');
 
     if (!code || !codeVerifier) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError('Missing authorization code or verifier');
       return;
     }
@@ -24,7 +23,8 @@ function CallbackContent() {
       .then((data) => {
         localStorage.setItem('openrouter_api_key', data.key);
         localStorage.removeItem('code_verifier');
-        router.push('/');
+          // Navigate to root relative to current path to support sub-path deployments
+          window.location.href = window.location.pathname.replace(/\/auth\/callback\/$/, '/');
       })
       .catch((err) => {
         console.error('OAuth error:', err);
@@ -38,7 +38,7 @@ function CallbackContent() {
         <h1 className="text-2xl font-bold text-red-500 mb-4">Authentication Error</h1>
         <p className="text-gray-600 mb-6">{error}</p>
         <button
-          onClick={() => router.push('/')}
+          onClick={() => window.location.href = window.location.pathname.replace(/\/auth\/callback\/$/, '/')}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
           Return to Home

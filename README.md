@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Advanced Chatbot with OpenRouter OAuth & BYOK
+
+A multi-interface AI chatbot supporting both web and terminal, featuring secure OpenRouter OAuth PKCE and Bring Your Own Key (BYOK) support.
+
+## Features
+
+- **Web Interface**: Modern, responsive UI built with Next.js, Tailwind CSS, and Lucide icons.
+- **Terminal Interface**: Powerful CLI for chatting directly from your terminal.
+- **Secure Auth**: Uses OpenRouter OAuth with PKCE (Proof Key for Code Exchange) — no server needed.
+- **BYOK Support**: Automatically respects your OpenRouter BYOK settings.
+- **Streaming**: Real-time response streaming for a smooth experience.
+- **GitHub Pages Ready**: Optimized for static deployment with sub-path support.
 
 ## Getting Started
 
-First, run the development server:
+### Web Interface
+
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Run development server**:
+   ```bash
+   npm run dev
+   ```
+
+3. **Build for production (Static Export)**:
+   ```bash
+   npm run build
+   ```
+   The static files will be in the `out/` directory.
+
+### Terminal Interface
+
+Run the chatbot directly in your terminal:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run cli
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The CLI will look for an `OPENROUTER_API_KEY` environment variable. If not found, it will launch an interactive OAuth login flow in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### GitHub Pages
 
-## Learn More
+This project is configured for easy deployment to GitHub Pages. A GitHub Actions workflow is included in `.github/workflows/nextjs.yml`.
 
-To learn more about Next.js, take a look at the following resources:
+To deploy:
+1. Push this repository to GitHub.
+2. Go to **Settings > Pages**.
+3. Under **Build and deployment > Source**, select **GitHub Actions**.
+4. The site will automatically build and deploy on every push to the `main` branch.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Technologies
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Frontend**: [Next.js](https://nextjs.org/) (App Router), [Tailwind CSS](https://tailwindcss.com/), [Lucide React](https://lucide.dev/)
+- **CLI**: Node.js, [ts-node](https://typestrong.org/ts-node/)
+- **API**: [OpenRouter](https://openrouter.ai/)
+- **Deployment**: [GitHub Actions](https://github.com/features/actions), [GitHub Pages](https://pages.github.com/)

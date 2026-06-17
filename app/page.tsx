@@ -56,7 +56,6 @@ export default function ChatPage() {
   useEffect(() => {
     const storedKey = localStorage.getItem('openrouter_api_key');
     if (storedKey) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setApiKey(storedKey);
       loadModels();
     }
@@ -71,7 +70,7 @@ export default function ChatPage() {
     const codeChallenge = await generateCodeChallenge(codeVerifier);
     localStorage.setItem('code_verifier', codeVerifier);
 
-    const callbackUrl = window.location.origin + '/auth/callback';
+    const callbackUrl = window.location.origin + window.location.pathname.replace(/\/$/, '') + '/auth/callback/';
     const authUrl = `${OPENROUTER_AUTH_URL}?callback_url=${encodeURIComponent(callbackUrl)}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
 
     window.location.href = authUrl;
