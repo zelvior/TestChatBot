@@ -68,8 +68,8 @@ async function main() {
     const defaultModel = 'google/gemini-2.0-flash-001';
     let selectedModel = defaultModel;
 
-    console.log(`Connected. Using model: ${selectedModel}`);
-    console.log('Type "/model <slug>" to change model, "/exit" to quit.\n');
+    console.log('\x1b[32m%s\x1b[0m', `Connected. Using model: ${selectedModel}`);
+    console.log('Type \x1b[33m/model <slug>\x1b[0m to change model, \x1b[33m/clear\x1b[0m to clear chat, \x1b[33m/exit\x1b[0m to quit.\n');
 
     const rl = readline.createInterface({
       input: process.stdin,
@@ -89,11 +89,18 @@ async function main() {
         return;
       }
 
+      if (input === '/clear') {
+        messages.length = 0;
+        console.log('\x1b[33m%s\x1b[0m', '\nConversation cleared.\n');
+        rl.prompt();
+        return;
+      }
+
       if (input.startsWith('/model ')) {
         const newModel = input.split(' ')[1];
         if (newModel) {
           selectedModel = newModel;
-          console.log(`Model changed to: ${selectedModel}\n`);
+          console.log('\x1b[36m%s\x1b[0m', `\nModel changed to: ${selectedModel}\n`);
         }
         rl.prompt();
         return;
@@ -106,7 +113,7 @@ async function main() {
 
       messages.push({ role: 'user', content: input });
 
-      process.stdout.write('\nAssistant: ');
+      process.stdout.write('\n\x1b[34mZBot:\x1b[0m ');
 
       let assistantContent = '';
       try {
@@ -119,7 +126,7 @@ async function main() {
         messages.push({ role: 'assistant', content: assistantContent });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
-        console.error(`\nError: ${errorMessage}\n`);
+        console.error('\x1b[31m%s\x1b[0m', `\nError: ${errorMessage}\n`);
       }
 
       rl.prompt();
