@@ -62,7 +62,7 @@ async function authenticate(): Promise<string> {
 async function main() {
   try {
     const apiKey = await authenticate();
-    console.log('\n--- Advanced Chatbot CLI ---');
+    console.log('\n--- ZBot CLI ---');
 
     await fetchModels();
     const defaultModel = 'google/gemini-2.0-flash-001';

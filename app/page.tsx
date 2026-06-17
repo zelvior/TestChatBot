@@ -126,7 +126,7 @@ export default function ChatPage() {
           <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Bot className="w-10 h-10 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Advanced Chatbot</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">ZBot</h1>
           <p className="text-gray-500 mb-8">
             Connect your OpenRouter account to start chatting with hundreds of AI models.
             Supports BYOK for full control over your keys and costs.
@@ -153,7 +153,7 @@ export default function ChatPage() {
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-xl text-gray-900">
             <Bot className="text-blue-600 w-6 h-6" />
-            <span>ChatBot</span>
+            <span>ZBot</span>
           </div>
           <button
             onClick={() => setMessages([])}
@@ -228,7 +228,7 @@ export default function ChatPage() {
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 md:hidden">
           <div className="flex items-center gap-2 font-bold text-gray-900">
             <Bot className="text-blue-600 w-5 h-5" />
-            <span>ChatBot</span>
+            <span>ZBot</span>
           </div>
           <button onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition-colors">
             <LogOut className="w-5 h-5" />
