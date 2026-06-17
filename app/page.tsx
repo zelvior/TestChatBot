@@ -14,7 +14,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { generateCodeVerifier, generateCodeChallenge } from '@/lib/pkce';
-import { OPENROUTER_AUTH_URL, fetchModels, type OpenRouterModel } from '@/lib/openrouter';
+import { OPENROUTER_AUTH_URL, fetchModels, streamChatCompletions, type OpenRouterModel, type ChatMessage } from '@/lib/openrouter';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -88,70 +88,29 @@ export default function ChatPage() {
     if (!input.trim() || !apiKey || isLoading) return;
 
     const userMessage: Message = { role: 'user', content: input };
+    const chatMessages: ChatMessage[] = [...messages, userMessage].map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'Advanced Chatbot',
-        },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: [...messages, userMessage],
-          stream: true,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send message');
-      }
-
       const assistantMessage: Message = { role: 'assistant', content: '' };
       setMessages((prev) => [...prev, assistantMessage]);
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
+      const stream = streamChatCompletions(apiKey, selectedModel, chatMessages);
 
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            const trimmedLine = line.trim();
-            if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
-
-            const data = trimmedLine.slice(6);
-            if (data === '[DONE]') break;
-
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices[0]?.delta?.content || '';
-              if (content) {
-                setMessages((prev) => {
-                  const last = prev[prev.length - 1];
-                  return [
-                    ...prev.slice(0, -1),
-                    { ...last, content: last.content + content }
-                  ];
-                });
-              }
-            } catch (e) {
-              console.error('Error parsing stream chunk', e, data);
-            }
-          }
-        }
+      for await (const chunk of stream) {
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          return [
+            ...prev.slice(0, -1),
+            { ...last, content: last.content + chunk }
+          ];
+        });
       }
     } catch (err) {
       console.error('Chat error:', err);
