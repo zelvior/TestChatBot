@@ -9,8 +9,10 @@ function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const code = searchParams.get('code');
     const codeVerifier = localStorage.getItem('code_verifier');
 
@@ -31,6 +33,8 @@ function CallbackContent() {
         setError(err.message || 'Authentication failed');
       });
   }, [searchParams, router]);
+
+  if (!mounted) return null;
 
   if (error) {
     return (

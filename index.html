@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZBot - Production Grade AI Chatbot</title>
+    <title>ZBot - Production Grade AI Assistant</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; height: 100dvh; }
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-white">
+<body class="bg-white selection:bg-blue-100 selection:text-blue-900">
     <div id="root"></div>
 
     <script type="text/babel">
@@ -25,9 +27,8 @@
         const OPENROUTER_AUTH_URL = 'https://openrouter.ai/auth';
         const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1';
 
-        // Minimal SVG Icons
         const SparklesIcon = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
         );
         const SendIcon = () => (
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
@@ -49,10 +50,7 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const code = urlParams.get('code');
                 const codeVerifier = localStorage.getItem('code_verifier');
-
-                if (code && codeVerifier) {
-                    exchangeCodeForKey(code, codeVerifier);
-                }
+                if (code && codeVerifier) exchangeCodeForKey(code, codeVerifier);
                 if (apiKey) fetchModels();
             }, [apiKey]);
 
@@ -88,21 +86,16 @@
             async function handleLogin() {
                 const array = new Uint8Array(32);
                 window.crypto.getRandomValues(array);
-                const codeVerifier = btoa(String.fromCharCode.apply(null, Array.from(array)))
-                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                const codeVerifier = btoa(String.fromCharCode.apply(null, Array.from(array))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
                 localStorage.setItem('code_verifier', codeVerifier);
-
                 const hashBuffer = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier));
-                const codeChallenge = btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(hashBuffer))))
-                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
+                const codeChallenge = btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(hashBuffer)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
                 window.location.href = `${OPENROUTER_AUTH_URL}?callback_url=${encodeURIComponent(window.location.href)}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
             }
 
             async function handleSubmit(e) {
                 e.preventDefault();
                 if (!input.trim() || !apiKey || isLoading) return;
-
                 const userMsg = { role: 'user', content: input };
                 const newMessages = [...messages, userMsg];
                 setMessages(newMessages);
@@ -112,24 +105,20 @@
                 try {
                     const assistantMsg = { role: 'assistant', content: '' };
                     setMessages([...newMessages, assistantMsg]);
-
                     const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ model: selectedModel, messages: newMessages, stream: true }),
                     });
-
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
                     let buffer = '';
-
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
                         buffer += decoder.decode(value, { stream: true });
                         const lines = buffer.split('\n');
                         buffer = lines.pop();
-
                         for (const line of lines) {
                             const trimmed = line.trim();
                             if (!trimmed.startsWith('data: ')) continue;
@@ -152,48 +141,49 @@
 
             if (!apiKey) {
                 return (
-                    <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a0a0a] text-white p-4">
-                        <div className="max-w-md w-full bg-[#111] rounded-[2.5rem] p-12 text-center border border-white/5 shadow-2xl shadow-blue-500/10">
-                            <div className="w-20 h-20 bg-blue-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-xl shadow-blue-600/20">
+                    <div className="flex flex-col items-center justify-center h-full bg-[#0a0a0a] text-white p-4">
+                        <div className="max-w-md w-full bg-[#111] rounded-[3rem] p-12 text-center border border-white/5 shadow-2xl shadow-blue-500/10 animate-fade-in">
+                            <div className="w-24 h-24 bg-blue-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-xl shadow-blue-600/20">
                                 <SparklesIcon />
                             </div>
-                            <h1 className="text-4xl font-bold mb-4">ZBot</h1>
-                            <p className="text-white/40 mb-10 text-sm leading-relaxed">The production-grade AI assistant, powered by OpenRouter.</p>
-                            <button onClick={handleLogin} className="w-full py-4 px-6 bg-white text-black rounded-2xl font-bold hover:bg-white/90 transition-all">Sign in with OpenRouter</button>
+                            <h1 className="text-5xl font-bold mb-6 tracking-tight">ZBot</h1>
+                            <p className="text-white/40 mb-10 text-base leading-relaxed">Experience a production-grade AI interface powered by OpenRouter.</p>
+                            <button onClick={handleLogin} className="w-full py-5 px-6 bg-white text-black rounded-2xl font-bold hover:bg-white/90 transition-all text-lg shadow-xl shadow-white/5">Get Started</button>
                         </div>
                     </div>
                 );
             }
 
             return (
-                <div className="flex flex-col h-screen max-w-5xl mx-auto">
-                    <header className="h-20 flex items-center justify-between px-6 shrink-0">
+                <div className="flex flex-col h-full max-w-6xl mx-auto">
+                    <header className="h-16 flex items-center justify-between px-6 shrink-0 border-b border-gray-50">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white"><SparklesIcon /></div>
-                            <span className="font-bold text-xl">ZBot</span>
+                            <span className="font-bold text-xl tracking-tight">ZBot</span>
                         </div>
                         <div className="flex items-center gap-4">
-                            <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} className="bg-gray-100 border-none rounded-xl px-4 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/20">
+                            <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} className="bg-gray-100 border-none rounded-xl px-4 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
                                 {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                             </select>
-                            <button onClick={() => {localStorage.removeItem('openrouter_api_key'); setApiKey(null);}} className="text-sm font-bold text-gray-400 hover:text-red-500 transition-colors">Sign Out</button>
+                            <button onClick={() => {localStorage.removeItem('openrouter_api_key'); setApiKey(null);}} className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-widest">Sign Out</button>
                         </div>
                     </header>
 
-                    <main className="flex-1 overflow-y-auto custom-scrollbar px-6 py-10 space-y-10">
+                    <main className="flex-1 overflow-y-auto custom-scrollbar px-6 py-10 space-y-12">
                         {messages.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center opacity-20">
-                                <SparklesIcon />
-                                <h2 className="text-4xl font-bold mt-4">How can I help you?</h2>
+                            <div className="h-full flex flex-col items-center justify-center text-center">
+                                <div className="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center text-blue-600 mb-8 animate-fade-in"><SparklesIcon /></div>
+                                <h2 className="text-4xl font-bold text-gray-900 tracking-tight">How can I help you?</h2>
+                                <p className="text-gray-400 mt-4 max-w-xs mx-auto">Connect your OpenRouter account to start chatting with hundreds of models.</p>
                             </div>
                         ) : (
                             messages.map((m, i) => (
-                                <div key={i} className={`flex gap-6 max-w-3xl mx-auto ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${m.role === 'user' ? 'bg-gray-900 text-white' : 'bg-blue-600 text-white'}`}>
+                                <div key={i} className={`flex gap-6 max-w-4xl mx-auto animate-fade-in ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm ${m.role === 'user' ? 'bg-gray-900 text-white' : 'bg-blue-600 text-white'}`}>
                                         {m.role === 'user' ? <UserIcon /> : <SparklesIcon />}
                                     </div>
-                                    <div className={`px-6 py-4 rounded-3xl text-base leading-relaxed ${m.role === 'user' ? 'bg-gray-100 text-gray-800' : 'bg-white border border-gray-100 text-gray-800 shadow-sm'}`}>
-                                        <div style={{ whiteSpace: 'pre-wrap' }}>{m.content || '...'}</div>
+                                    <div className={`px-7 py-5 rounded-[2.5rem] text-base leading-relaxed ${m.role === 'user' ? 'bg-gray-100 text-gray-800 rounded-tr-none' : 'bg-white border border-gray-100 text-gray-800 shadow-sm rounded-tl-none'}`}>
+                                        <div class="prose prose-sm max-w-none prose-slate" style={{ whiteSpace: 'pre-wrap' }}>{m.content || '...'}</div>
                                     </div>
                                 </div>
                             ))
@@ -201,21 +191,23 @@
                         <div ref={messagesEndRef} className="h-10" />
                     </main>
 
-                    <footer className="p-6 shrink-0">
-                        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto relative group">
-                            <div className="relative flex items-center bg-white border border-gray-200 rounded-[2rem] shadow-2xl shadow-gray-200/50 p-2 pr-3">
+                    <footer className="p-6 shrink-0 bg-white">
+                        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto relative group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-[3rem] blur opacity-0 group-focus-within:opacity-100 transition duration-1000"></div>
+                            <div className="relative flex items-center bg-white border border-gray-100 rounded-[2.5rem] shadow-2xl shadow-gray-200/40 p-2 pr-3 ring-1 ring-black/5">
                                 <textarea
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={(e) => {if (e.key === 'Enter' && !e.shiftKey) {e.preventDefault(); handleSubmit(e);}}}
                                     placeholder="Message ZBot..."
                                     rows="1"
-                                    className="w-full py-4 px-4 bg-transparent border-none focus:ring-0 text-gray-800 text-base resize-none"
+                                    className="w-full py-4 px-6 bg-transparent border-none focus:ring-0 text-gray-800 text-base resize-none"
                                 />
-                                <button disabled={isLoading || !input.trim()} className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-300 transition-all shadow-lg">
-                                    <SendIcon />
+                                <button disabled={isLoading || !input.trim()} className={`shrink-0 w-12 h-12 rounded-[1.25rem] flex items-center justify-center transition-all shadow-lg ${isLoading || !input.trim() ? 'bg-gray-50 text-gray-300' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20 active:scale-95'}`}>
+                                    {isLoading ? <span class="animate-spin text-xl">⏳</span> : <SendIcon />}
                                 </button>
                             </div>
+                            <p className="mt-4 text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">Powered by OpenRouter BYOK</p>
                         </form>
                     </footer>
                 </div>

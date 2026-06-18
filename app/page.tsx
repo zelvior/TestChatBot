@@ -48,6 +48,7 @@ interface Conversation {
 }
 
 export default function ZBotPage() {
+  const [mounted, setMounted] = useState(false);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [models, setModels] = useState<OpenRouterModel[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('google/gemini-2.0-flash-001');
@@ -61,6 +62,7 @@ export default function ZBotPage() {
 
   // Initialize
   useEffect(() => {
+    setMounted(true);
     const storedKey = localStorage.getItem('openrouter_api_key');
     if (storedKey) {
       setApiKey(storedKey);
@@ -233,6 +235,8 @@ export default function ZBotPage() {
     }
   };
 
+  if (!mounted) return null;
+
   if (!apiKey) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a0a0a] text-white p-4 font-sans selection:bg-blue-500/30">
@@ -267,7 +271,7 @@ export default function ZBotPage() {
   }
 
   return (
-    <div className="flex h-screen bg-white selection:bg-blue-100 selection:text-blue-900 overflow-hidden font-sans">
+    <div className="flex h-[100dvh] bg-white selection:bg-blue-100 selection:text-blue-900 overflow-hidden font-sans">
       {/* Navigation Overlay for Mobile */}
       <AnimatePresence>
         {!isSidebarOpen && (
